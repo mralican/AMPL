@@ -1,49 +1,30 @@
-set DP = 1..5; # set of demand points
-set BS = 1..3;
-set dx = 1..4;
-set dy = 1..4;
+# I defined x and y coordinates for both BSs and DPs in a 1000x1000m area
+# The area divided 4 equal pieces and each piece has a BS in the centre (250,250)(250,750)(750,250)(750,750)
+# Then random x and y coordinates assigned for each user and pisagor calculation is made for each DP to BS
+# The area pieces shows the coverage area of BS and the furthest point between any DP to BS can be 250* 1,414 = 353,55m
+# This means if pisagor < 353,55m then serve the DP else do not serve the DP
+# Each DP can be only 1 BS's coverage area
 
-# BS'lar için 2 tane sayı ata.
-# DP'ler için de 1 ile 1000 arasında 2 tane sayı ata
-# Sonra her DP için tüm BS'lara pisagor hesapla
-# En küçük değeri ve BS'yi seç
-# 
-param bs_loc {dx,dy,BS} :=
-
-[*,*,1]: 1		2		3		4 :=
-1 		250		
-2 		0
-3 		0
-4		0
-[*,*,2]: FRA DET LAN WIN STL FRE LAF :=
-GARY 39 14 11 14 16 82 8
-CLEV 27 9 12 9 26 95 17
-PITT 24 14 17 13 28 99 20
-[*,*,3]: FRA DET LAN WIN STL FRE LAF :=
-GARY 41 15 12 16 17 86 8
-CLEV 29 9 13 9 28 99 18
-PITT 26 14 17 13 31 104 20 ;
+# ------------------------- mobility scenario ---------------------
+# we will either enhance 1000x1000m area or shrink the coverage area of BS
+# lets say we reduce the coverage area to 250m for each BS
+# if pisagor > 250m for ALL BSs for a DP, then we will have a look for the nearest served DP
+# also we might consider both DPs are mobile DPs
 
 
+set BS = 1..4; # set of BSs
+set DP = 1..5; # set of DPs
 
 
-# param axes1 {bs in BS, x in dx, y in dy} := (bs, 0,0);
-# param axes2 {bs in BS, x in dx, y in dy} := (for each BS, max(x in dx), max(y in dy));
-# 
-# var bs_loc {BS,dx,dy};
-# var bs_each_other {bs in BS,x in dx, y in dy, x2 in dx, y2 in dy: x2<>x and y2<>y} = bs_loc[bs,x2,y2] - bs_loc[bs,x,y];
-# 
-# # var interf {bs in BS, dp in DP, rb in RB} = (sum{j in BS, v in DP:j<>bs and v<>dp} p[j,v,rb]*gain[j,dp,rb] );  # Interference
+param BS_loc_x {bs in BS} >=0;
+param BS_loc_y {bs in BS} >=0;
+
+param d_min:=0; 					# min distance between BS and user in meters
+param d_max:=1000; 					# max distance between BS and user in meters
+
+param DP_loc_x {dp in DP}:= Uniform(d_min, d_max);
+param DP_loc_y {dp in DP}:= Uniform(d_min, d_max);
 
 
-# maximize func: {bs in BS, x in dx,y in dy} (bs_loc[bs,x,y] - axes1[bs,x,y]) + (axes2[bs,x,y] - bs_loc[bs,x,y]) + 
+var pisagor {bs in BS, dp in DP} := sqrt((BS_loc_x[bs]-DP_loc_x[dp])^2 + (BS_loc_y[bs]-DP_loc_y[dp])^2) ;
 
-# (stay away from min points) + (stay away from max points) + (stay away from each other)
-
-
-
-# param dp_loc {DP, dx, dy};
-# for {dp in DP} let dp_loc[dp,x in dx,y in dy] := (Uniform(0, card{x in dx}) , Uniform(0, card{y in dy}));	
-
-# user location is independent from location of bs. It is working for 1 dimension but we need 2D. 
-# card(s) = number of elements in s
